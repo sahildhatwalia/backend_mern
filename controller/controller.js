@@ -177,7 +177,52 @@ const mailoption = {
 
 
 
-module.exports={Createuser,login,loginwithotp}
+const verifyotp=async(req,res)=>{
+    try{
+        const {email,otp}=req.body;
+        const user=await User.findOne({email})
+        if(!user){
+            return res.status(404).json({message:"email not found"})
+        }
+        if(user.otp===otp){
+            user.otp=null
+            await user.save()
+        }
+        res.status(200).json({message:"login sucess"})
+
+    }
+      catch(error){
+        res.status(500).json({message:"Internal server error",error:error.message})
+    }
+}
+
+const getbyid=async(req,res)=>{
+    try{
+const userid=req.params.id
+const user=await User.findById(userid)
+if(!user){
+    return res.status(404).json({message:"user not found"})
+}
+res.status(200).json({message:"user fetched successfully",user})
+    }
+      catch(error){
+        res.status(500).json({message:"Internal server error",error:error.message})
+    }
+}
+const getall=async(req,res)=>{
+    try{
+        const user=await User.find()
+        res.status(200).json({message:"user details",user})
+
+    }
+    catch(error){
+        res.status(500).json({message:"Internal server error",error:error.message})
+    }
+}
+
+
+
+module.exports={Createuser,login,loginwithotp,verifyotp,getbyid,getall}
 
 
 
