@@ -5,7 +5,7 @@ const Createuser=async(req,res)=>{
     try{
         const {name,email,mobile,country,password}=req.body;
         if(!name || !email || !mobile || !country || !password){
-            res.status(400).json({message:"Al feilds are required"})
+            res.status(400).json({message:"All fields are required"})
         }
 
         const user=await User.findOne({email})
@@ -219,10 +219,64 @@ const getall=async(req,res)=>{
         res.status(500).json({message:"Internal server error",error:error.message})
     }
 }
+const updateuser=async(req,res)=>{
+    try{
+        const userid=req.params.id
+        const {name,email,mobile,country}=req.body
+        const user=await User.findByIdAndUpdate(userid,req.body,{new:true})
+        if(!user){
+            return res.status(404).json({message:"not found"})
+        }
+        res.status(200).json({message:"user update successfully",user})
+
+
+    }
+     catch(error){
+        res.status(500).json({message:"Internal server error",error:error.message})
+    }
+}
+
+
+const deleteuser=async(req,res)=>{
+    try{
+        const userid=req.params.id
+        const user=await User.findByIdAndDelete(userid)
+        if(!user){
+            return res.status(404).json({message:"user not found"})
+        }
+        res.status(200).json({message:"user delete successfully"})
+
+    }
+    catch(error){
+        res.status(500).json({message:"Internal server error",error:error.message})
+    }
+}
+
+const searchuser=async(req,res)=>{
+    try{
+        const {query}=req.query
+        
+ if (!query) {
+            return res.status(400).json({ message: "Search query is required" });
+        }
+
+        const users = await User.find({
+            $or: [
+                { name: { $regex: query, $options: "i" } },
+                { email: { $regex: query, $options: "i" } }
+            ]
+        })
+
+        res.status(200).json(users);
+    }
+     catch(error){
+        res.status(500).json({message:"Internal server error",error:error.message})
+    }
+}
 
 
 
-module.exports={Createuser,login,loginwithotp,verifyotp,getbyid,getall}
+module.exports={Createuser,login,loginwithotp,verifyotp,getbyid,getall,updateuser,deleteuser,searchuser}
 
 
 
