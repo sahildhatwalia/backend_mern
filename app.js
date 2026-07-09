@@ -22,3 +22,11 @@ app.use("/api",router)
 app.listen(PORT,()=>{
     console.log(`server is running on port ${PORT}`)
 })
+
+
+
+/*
+to view the uploaded image in the browser, you can use the following URL format:
+http://localhost:4000/uploads/<filename>
+http://localhost:4000/uploads/1783579735028-Screenshot%202025-05-02%20220844.png
+*/
