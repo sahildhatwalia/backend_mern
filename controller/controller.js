@@ -274,9 +274,28 @@ const searchuser=async(req,res)=>{
     }
 }
 
+const uploadimage=async(req,res)=>{
+    try{
+        const userid=req.params.id;
+        const user=await User.findById(userid)
+        if(!user){
+            return res.status(404).json({message:"user not found"})
+        }
+        if(!req.file){
+            return res.status(400).json({message:"No file uploaded"})
+        }
+        user.avatar=req.file.filename
+        await user.save()
+        res.status(200).json({message:"image uploaded successfully",user})
+    }
+     catch(error){
+        res.status(500).json({message:"Internal server error",error:error.message})
+    }
+}
 
 
-module.exports={Createuser,login,loginwithotp,verifyotp,getbyid,getall,updateuser,deleteuser,searchuser}
+
+module.exports={Createuser,login,loginwithotp,verifyotp,getbyid,getall,updateuser,deleteuser,searchuser,uploadimage}
 
 
 
