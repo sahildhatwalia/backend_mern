@@ -24,6 +24,12 @@ const userSchema=new mongoose.Schema({
     },
     avatar:{
         type:String
+    },
+    oldpassword:{
+        type:String
+    },
+    newpassword:{
+        type:String
     }
 })
 const User=mongoose.model("User",userSchema)

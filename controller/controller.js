@@ -293,9 +293,36 @@ const uploadimage=async(req,res)=>{
     }
 }
 
+const updatepass=async(req,res)=>{
+    try{
+        const {email,oldpassword,newpassword}=req.body;
+        const user=await User.findOne({email})
+        if(!user){
+            return res.status(404).json({message:"user not found"})
+        }
+        const comparepass=await bcrypt.compare(oldpassword,user.password)
+        if(!comparepass){
+            return res.status(401).json({message:"invalid password"})
+        }
+        const haspassword=await bcrypt.hash(newpassword,10)
+        user.password=haspassword
+        await user.save()
+        res.status(200).json({message:"password updated successfully"})
 
 
-module.exports={Createuser,login,loginwithotp,verifyotp,getbyid,getall,updateuser,deleteuser,searchuser,uploadimage}
+    }
+    catch(error){
+         res.status(500).json({message:"Internal server error",error:error.message})
+    }
+}
+
+
+
+
+
+
+
+module.exports={Createuser,login,loginwithotp,verifyotp,getbyid,getall,updateuser,deleteuser,searchuser,uploadimage,updatepass}
 
 
 

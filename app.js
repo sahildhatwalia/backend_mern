@@ -1,6 +1,8 @@
 const express=require("express")
 const mongoose=require("mongoose")
 const cors=require("cors")
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./swagger");
 require("dotenv").config();
 const PORT=4000
 
@@ -8,6 +10,11 @@ const app=express()
 app.use(cors({
     origin: 'http://localhost:3000' 
 })); 
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 const router=require("./routes/route")
 mongoose.connect("mongodb://localhost:27017/node")
 .then(()=>{
