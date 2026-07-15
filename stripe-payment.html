@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stripe Checkout</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .amount-info {
+      background: #f0f4ff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #667eea;
+    }
+    .amount-info p {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .amount-info .price {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    #card-element {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: white;
+    }
+    #card-element.StripeElement--focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 10px;
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .message {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;
+    }
+    .message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+    .message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+    .message.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+      display: block;
+    }
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+      display: none;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .button-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💳 Payment Gateway</h1>
+    
+    <div class="form-group">
+      <label for="amount">Enter Amount (₹)</label>
+      <input type="number" id="amount" placeholder="Enter amount in rupees" value="500" min="1" />
+    </div>
+
+    <div class="amount-info">
+      <p>Total Amount to Pay:</p>
+      <div class="price" id="totalAmount">₹500</div>
+    </div>
+
+    <form id="payment-form">
+      <button type="submit" id="submit-btn">
+        <div class="button-content">
+          <div class="spinner" id="spinner"></div>
+          <span id="button-text">Proceed to Payment</span>
+        </div>
+      </button>
+    </form>
+
+    <div id="payment-message" class="message"></div>
+  </div>
+
+  <script>
+    const stripe = Stripe('pk_test_51TtKkWFrWUjJyHztPrZAGvLc1KqvRsmYO8YPgbgxWiwYOVTQE61a4q0XOyiHqJOwqzk9rPBLGxrQWUbw0CxYB6YM00X7JRqOpm');
+
+    const amountInput = document.getElementById("amount");
+    const totalAmountDisplay = document.getElementById("totalAmount");
+    const form = document.getElementById("payment-form");
+    const messageDiv = document.getElementById("payment-message");
+    const spinner = document.getElementById("spinner");
+    const submitBtn = document.getElementById("submit-btn");
+    const buttonText = document.getElementById("button-text");
+
+    // Update amount display
+    amountInput.addEventListener("change", () => {
+      const amount = parseInt(amountInput.value) || 0;
+      totalAmountDisplay.textContent = "₹" + amount;
+    });
+
+    // Handle form submission
+    form.addEventListener("submit", handleSubmit);
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const amount = parseInt(amountInput.value);
+
+      if (!amount || amount < 1) {
+        showMessage("Please enter a valid amount", "error");
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        showMessage("Redirecting to Stripe Checkout...", "info");
+        
+        // Create checkout session via backend
+        const response = await fetch("http://localhost:4000/api/payment/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: amount,
+            currency: "inr"
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create checkout session");
+        }
+
+        const { sessionId } = await response.json();
+
+        if (!sessionId) {
+          throw new Error("No session ID received");
+        }
+
+        // Redirect to Stripe Checkout
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: sessionId
+        });
+
+        if (error) {
+          showMessage(`Redirect failed: ${error.message}`, "error");
+          setLoading(false);
+        }
+      } catch (error) {
+        showMessage(`Error: ${error.message}`, "error");
+        setLoading(false);
+      }
+    }
+
+    function showMessage(message, type) {
+      messageDiv.textContent = message;
+      messageDiv.className = `message ${type}`;
+    }
+
+    function setLoading(isLoading) {
+      if (isLoading) {
+        spinner.style.display = "inline-block";
+        buttonText.textContent = "Processing...";
+        submitBtn.disabled = true;
+        amountInput.disabled = true;
+      } else {
+        spinner.style.display = "none";
+        buttonText.textContent = "Proceed to Payment";
+        submitBtn.disabled = false;
+        amountInput.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

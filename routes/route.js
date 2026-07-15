@@ -1,6 +1,6 @@
 const express=require("express")
 
-const { Createuser, login, loginwithotp, verifyotp, getbyid, getall, updateuser, deleteuser, searchuser, uploadimage, updatepass } = require("../controller/controller")
+const { Createuser, login, loginwithotp, verifyotp, getbyid, getall, updateuser, deleteuser, searchuser, uploadimage, updatepass, createPaymentIntent, createCheckoutSession } = require("../controller/controller")
 const router=express.Router()
 
 const upload = require("../middleware/upload");
@@ -93,5 +93,7 @@ router.get("/search",searchuser)
 
 
 router.put("/upload/:id",upload.single("avatar"),uploadimage)
+router.post("/payment/create-payment-intent", createPaymentIntent)
+router.post("/payment/create-checkout-session", createCheckoutSession)
 
 module.exports=router

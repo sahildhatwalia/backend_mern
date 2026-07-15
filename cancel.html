@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Cancelled</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      padding: 60px 40px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+    .cancel-icon {
+      font-size: 80px;
+      color: #f5576c;
+      margin-bottom: 20px;
+      animation: shake 0.5s;
+    }
+    @keyframes shake {
+      0%, 100% {
+        transform: translateX(0);
+      }
+      25% {
+        transform: translateX(-10px);
+      }
+      75% {
+        transform: translateX(10px);
+      }
+    }
+    h1 {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    p {
+      font-size: 16px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: transform 0.2s;
+    }
+    a:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="cancel-icon">❌</div>
+    <h1>Payment Cancelled</h1>
+    <p>Your payment was cancelled. No charges have been made to your account.</p>
+    <p style="font-size: 14px; color: #999;">
+      If this was a mistake, you can try again.
+    </p>
+    <a href="http://localhost:4000/stripe-payment.html">Try Again</a>
+  </div>
+</body>
+</html>

@@ -8,7 +8,7 @@ const PORT=4000
 
 const app=express()
 app.use(cors({
-    origin: 'http://localhost:3000' 
+    origin: ['http://localhost:3000', 'http://localhost:4000'] 
 })); 
 app.use(
   "/api-docs",
@@ -24,6 +24,7 @@ mongoose.connect("mongodb://localhost:27017/node")
     console.error("Error connecting to MongoDB:", err)
 })
 app.use("/uploads", express.static("uploads"));
+app.use(express.static("."));
 app.use(express.json())
 app.use("/api",router)
 app.listen(PORT,()=>{

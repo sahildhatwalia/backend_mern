@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 20px;
+      white-space: pre-wrap;
+      background: #f3f4f6;
+      padding: 10px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Test Payment API</h2>
+  <input id="amount" type="number" placeholder="Enter amount" value="500" />
+  <input id="currency" type="text" placeholder="Currency" value="inr" />
+  <button onclick="createPayment()">Create Payment Intent</button>
+
+  <div id="result" class="result">Response will appear here.</div>
+
+  <script>
+    async function createPayment() {
+      const amount = document.getElementById('amount').value;
+      const currency = document.getElementById('currency').value;
+      const resultBox = document.getElementById('result');
+
+      resultBox.textContent = 'Sending request...';
+
+      try {
+        const response = await fetch('http://localhost:4000/api/payment/create-payment-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            amount: Number(amount),
+            currency
+          })
+        });
+
+        const data = await response.json();
+        resultBox.textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        resultBox.textContent = 'Error: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>

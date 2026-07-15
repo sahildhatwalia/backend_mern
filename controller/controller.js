@@ -1,6 +1,12 @@
 const User=require("../models/model")
 const bcrypt=require("bcrypt")
 const nodemailer=require("nodemailer")
+const jwt=require("jsonwebtoken")
+const stripe=require("stripe")
+require("dotenv").config()
+
+const stripeInstance = process.env.STRIPE_SECRET_KEY ? stripe(process.env.STRIPE_SECRET_KEY) : null
+
 const Createuser=async(req,res)=>{
     try{
         const {name,email,mobile,country,password}=req.body;
@@ -39,7 +45,9 @@ const login=async(req,res)=>{
         if(!comparepass){
             return res.status(401).json({message:"invalid password"})
         }
-        res.status(200).json({message:"login sucessfully"})
+        const token=jwt.sign({userId:user._id},"qwertyuioertyu3456789",{expiresIn:"1h"})
+        await 
+        res.status(200).json({message:"login sucessfully",token,user})
 
 
     }
@@ -322,7 +330,103 @@ const updatepass=async(req,res)=>{
 
 
 
-module.exports={Createuser,login,loginwithotp,verifyotp,getbyid,getall,updateuser,deleteuser,searchuser,uploadimage,updatepass}
+const createPaymentIntent=async(req,res)=>{
+    try{
+        const { amount, currency = "inr", metadata = {} } = req.body
+
+        if (!amount) {
+            return res.status(400).json({ message: "Amount is required" })
+        }
+
+        if (!stripeInstance) {
+            return res.status(500).json({ message: "Stripe secret key is not configured" })
+        }
+
+        const numericAmount = Number(amount)
+        if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+            return res.status(400).json({ message: "Amount must be a positive number" })
+        }
+
+        const normalizedCurrency = String(currency).toLowerCase()
+        const finalAmount = normalizedCurrency === "inr"
+            ? Math.round(numericAmount * 100)
+            : Math.round(numericAmount)
+
+        const paymentIntent = await stripeInstance.paymentIntents.create({
+            amount: finalAmount,
+            currency: normalizedCurrency,
+            automatic_payment_methods: { enabled: true },
+            metadata: {
+                source: "backend_api",
+                ...metadata
+            }
+        })
+
+        res.status(200).json({
+            message: "Payment intent created successfully",
+            clientSecret: paymentIntent.client_secret,
+            paymentIntentId: paymentIntent.id,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency
+        })
+    }
+    catch(error){
+        res.status(500).json({message:"Internal server error",error:error.message})
+    }
+}
+
+const createCheckoutSession=async(req,res)=>{
+    try{
+        const { amount, currency = "inr" } = req.body
+
+        if (!amount) {
+            return res.status(400).json({ message: "Amount is required" })
+        }
+
+        if (!stripeInstance) {
+            return res.status(500).json({ message: "Stripe secret key is not configured" })
+        }
+
+        const numericAmount = Number(amount)
+        if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+            return res.status(400).json({ message: "Amount must be a positive number" })
+        }
+
+        const normalizedCurrency = String(currency).toLowerCase()
+        const finalAmount = normalizedCurrency === "inr"
+            ? Math.round(numericAmount * 100)
+            : Math.round(numericAmount)
+
+        const session = await stripeInstance.checkout.sessions.create({
+            payment_method_types: ["card"],
+            line_items: [
+                {
+                    price_data: {
+                        currency: normalizedCurrency,
+                        product_data: {
+                            name: "Payment"
+                        },
+                        unit_amount: finalAmount
+                    },
+                    quantity: 1
+                }
+            ],
+            mode: "payment",
+            success_url: `http://localhost:4000/success.html?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `http://localhost:4000/cancel.html`
+        })
+
+        res.status(200).json({
+            message: "Checkout session created successfully",
+            sessionId: session.id
+        })
+    }
+    catch(error){
+        res.status(500).json({message:"Internal server error",error:error.message})
+    }
+}
+
+module.exports={Createuser,login,loginwithotp,verifyotp,getbyid,getall,updateuser,deleteuser,searchuser,uploadimage,updatepass,createPaymentIntent,createCheckoutSession}
 
 
 
