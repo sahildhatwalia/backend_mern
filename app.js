@@ -37,6 +37,8 @@ app.get("/api/firebase-config", (req, res) => {
     });
 });
 
+
+
 app.use(express.static("."));
 app.use(express.json())
 app.use("/api",router)
