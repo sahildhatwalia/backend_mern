@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Google Sign In</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f5f7fb;
+        }
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .status {
+            margin-top: 16px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Sign in with Google</h2>
+        <button id="googleSignInBtn" type="button">Sign in with Google</button>
+        <div id="status" class="status">Loading...</div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script>
+        async function initializeFirebase() {
+            const response = await fetch('/api/firebase-config');
+            const config = await response.json();
+
+            firebase.initializeApp(config);
+            const auth = firebase.auth();
+            const provider = new firebase.auth.GoogleAuthProvider();
+
+            const status = document.getElementById('status');
+            const button = document.getElementById('googleSignInBtn');
+
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    status.innerHTML = `Signed in as <strong>${user.displayName || user.email}</strong>`;
+                    button.textContent = 'Sign out';
+                } else {
+                    status.textContent = 'Please sign in to continue.';
+                    button.textContent = 'Sign in with Google';
+                }
+            });
+
+            button.addEventListener('click', async () => {
+                const user = auth.currentUser;
+                if (user) {
+                    await auth.signOut();
+                    return;
+                }
+
+                try {
+                    await auth.signInWithPopup(provider);
+                    status.textContent = 'Signing in...';
+                } catch (error) {
+                    status.textContent = error.message || 'Google sign-in failed.';
+                }
+            });
+        }
+
+        initializeFirebase().catch((error) => {
+            document.getElementById('status').textContent = error.message || 'Firebase could not be initialized.';
+        });
+    </script>
+</body>
+</html>
